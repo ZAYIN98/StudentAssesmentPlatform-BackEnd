@@ -1,18 +1,30 @@
-const mysql      = require('mysql');
-const connection = mysql.createConnection({
-  host     : 'localhost:8000',
-  user     : 'root',
-  password : '',
-  database : 'sap'
-});
- 
-connection.connect((err) => {
-    throw err
-});
- 
-connection.query('SELECT 1 + 1 AS solution', function (error, results, fields) {
-  if (error) throw error;
-  console.log('The solution is: ', results[0].solution);
-});
- 
-connection.end();
+const mysql = require('mysql2');
+const bluebird = require('bluebird');
+
+const dbConf = {
+    host: 'localhost',
+    user: 'root',
+    password: '',
+    database: 'sap',
+    Promise: bluebird
+};
+
+class Database {
+    static async getDBConnection() {
+        try {
+            if (!this.db) {
+                await mysql.createConnection(dbConf);
+                const pool = mysql.createPool(dbConf);
+                const promisePool = pool.promise();
+                this.db = promisePool;
+            }
+            return this.db;
+        } catch (err) {
+            console.log('Error in database connection');
+            console.log(err.errro || err);
+        }
+
+    }
+}
+
+module.exports = Database;
