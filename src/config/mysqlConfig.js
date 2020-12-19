@@ -1,5 +1,8 @@
 const mysql = require('mysql2');
 const bluebird = require('bluebird');
+const dotenv = require('dotenv')
+
+dotenv.config({ path: '../../.env' })
 
 const dbConf = {
     host: 'localhost',
