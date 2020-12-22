@@ -16,15 +16,19 @@ class Database {
     static async getDBConnection() {
         try {
             if (!this.db) {
-                await mysql.createConnection(dbConf);
-                const pool = mysql.createPool(dbConf);
-                const promisePool = pool.promise();
-                this.db = promisePool;
+                try {
+                    await mysql.createConnection(dbConf);
+                    const pool = mysql.createPool(dbConf);
+                    const promisePool = pool.promise();
+                    this.db = promisePool; 
+                } catch (error) {
+                    console.log(error);
+                }  
             }
             return this.db;
-        } catch (err) {
+        } catch (error) {
             console.log('Error in database connection');
-            console.log(err.errro || err);
+            console.log(error);
         }
 
     }

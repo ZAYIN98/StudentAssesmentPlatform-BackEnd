@@ -1,8 +1,13 @@
 const express = require('express')
 var cors = require('cors')
+// const session = require('express-session')
+
 const adminRouter = require('./src/routers/admin')
 const lecturerRouter = require('./src/routers/lecturer')
-// const session = require('express-session')
+const studentRouter = require('./src/routers/student')
+const assignmentRouter = require('./src/routers/assignment')
+const dataSetRouter = require('./src/routers/assignment')
+
 
 const app = express()
 const port = 3000
@@ -21,6 +26,9 @@ app.set('trsut proxy', 1)
 app.use(express.json())
 app.use('/admin',adminRouter)
 app.use('/lecturer',lecturerRouter)
+app.use('/student',studentRouter)
+app.use('/assignment',assignmentRouter)
+app.use('/dataSet',dataSetRouter)
 
 app.listen(port, () => {
     console.log('Server running at port ' + port)
