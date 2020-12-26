@@ -3,6 +3,7 @@ const sql = require('../config/mysqlConfig')
 
 const router = new express.Router()
 
+//Login
 router.post('/login', async (req,res) => {
     let userName = req.body.userName
     let password = req.body.password
@@ -23,6 +24,7 @@ router.post('/login', async (req,res) => {
     }
 })
 
+//Add and Admin
 router.post('/addA', async (req,res) => {
     let userName = req.body.userName
     let password = req.body.password
@@ -49,6 +51,7 @@ router.post('/addA', async (req,res) => {
     } 
 })
 
+//Update Admin
 router.patch('/updateA', async (req,res) => {
     let userName = req.body.userName
     let newUserName = req.body.newUserName
@@ -91,6 +94,7 @@ router.patch('/updateA', async (req,res) => {
 
 })
 
+//Delete Admin
 router.delete('/deleteA', async (req,res) => {
     let userName = req.body.userName
     let query = 'DELETE FROM admin WHERE admin.userName = ?'

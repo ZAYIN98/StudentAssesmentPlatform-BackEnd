@@ -3,6 +3,7 @@ const sql = require('../config/mysqlConfig')
 
 const router = new express.Router()
 
+//Login
 router.post('/login', async (req,res) => {
     let userName = req.body.userName
     let password = req.body.password
@@ -23,6 +24,7 @@ router.post('/login', async (req,res) => {
     }
 })
 
+//Add Lecturer
 router.post('/addL', async (req,res) => {
     let userName = req.body.userName
     let password = req.body.password
@@ -51,6 +53,7 @@ router.post('/addL', async (req,res) => {
     } 
 })
 
+//Update Lecturer
 router.patch('/updateL', async (req,res) => {
     let userName = req.body.userName
     let newUserName = req.body.newUserName
@@ -74,7 +77,7 @@ router.patch('/updateL', async (req,res) => {
                 if(data.length === 0 || data.length === undefined){
                     let query2 = 'UPDATE lecturer SET userName = ?, password = ?, email = ?, name = ? WHERE lecturer.userName = ?'
                     try {
-                        await conn.execute(query2,[userName,password,email,name,userName])
+                        await conn.execute(query2,[newUserName,password,email,name,userName])
                         res.send('Updated2')
                     } catch (error) {
                         res.status(400).send(error)
@@ -93,6 +96,7 @@ router.patch('/updateL', async (req,res) => {
 
 })
 
+//update Lecturer Status
 router.patch('/updateLecturerStatus', async (req,res) =>{
     let userName = req.body.userName
     let status = req.body.status
@@ -106,6 +110,7 @@ router.patch('/updateLecturerStatus', async (req,res) =>{
     }
 })
 
+//Assign a Lecturer
 router.post('/assignLecturer', async (req,res) => {
     let lecturerId = req.body.lecturerId
     let subjectId = req.body.subjectId
@@ -136,12 +141,15 @@ router.post('/assignLecturer', async (req,res) => {
     }  
 })
 
+//Delete a Lecturer
 router.delete('/deleteL', async (req,res) => {
-    let userName = req.body.userName
-    let query = 'DELETE FROM lecturer WHERE lecturer.userName = ?'
+    let lecturerId = req.body.lecturerId
+    let query = 'DELETE FROM lecturerassigned WHERE lecturerassigned.lecturerId = ?'
+    let query2 = 'DELETE FROM lecturer WHERE lecturer.lecturerId = ?'
     try {
         let conn = await sql.getDBConnection();
-        await conn.execute(query,[userName])
+        await conn.execute(query,[lecturerId])
+        await conn.execute(query2,[lecturerId])
         res.status(200).send('Lecturer Deleted')
     } catch (error) {
         res.status(400).send(error)
