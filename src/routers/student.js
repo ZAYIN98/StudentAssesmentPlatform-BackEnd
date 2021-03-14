@@ -16,7 +16,6 @@ router.post('/login', async (req,res) => {
         if(data.length === 0 || data === undefined){
             res.status(400).send('Invalid login')
         }
-
         res.status(200).send(data)
 
     } catch (error) {

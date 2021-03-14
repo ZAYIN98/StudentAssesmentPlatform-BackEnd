@@ -1,5 +1,7 @@
 const express = require('express');
 const sql = require('../config/mysqlConfig')
+const token = require('../methods/generateToken')
+const auth = require('../middleware/adminAuth')
 
 const router = new express.Router()
 
@@ -8,24 +10,38 @@ router.post('/login', async (req,res) => {
     let userName = req.body.userName
     let password = req.body.password
     let query = 'Select * from admin where userName = ? and password = ?'
-
-    try {
+     try {
         let conn = await sql.getDBConnection();
         let [data,fields] = await conn.execute(query,[userName,password])
 
         if(data.length === 0 || data === undefined){
             res.status(400).send('Invalid login')
         }
+        let getToken = await token.generateToken(data[0].adminId,1,data[0].userName)
+        let data2 = {...data[0], token: getToken}
+        res.send(data2)
 
+    } catch (error) {
+        res.status(400).send('error here')
+    }
+})
+
+//Fetch Admin
+router.post('/fetchAdmin', auth, async (req,res) => {
+    let adminId = req.body.adminId 
+    let query = 'Select * from admin where adminId = ?'
+     try {
+        let conn = await sql.getDBConnection();
+        let [data,fields] = await conn.execute(query,[adminId])
         res.send(data)
 
     } catch (error) {
-        res.status(400).send(error)
+        res.status(400).send('error fetching Admin')
     }
 })
 
 //Add and Admin
-router.post('/addA', async (req,res) => {
+router.post('/addA', auth, async (req,res) => {
     let userName = req.body.userName
     let password = req.body.password
     let email = req.body.email
@@ -52,7 +68,7 @@ router.post('/addA', async (req,res) => {
 })
 
 //Update Admin
-router.patch('/updateA', async (req,res) => {
+router.patch('/updateA', auth, async (req,res) => {
     let userName = req.body.userName
     let newUserName = req.body.newUserName
     let email = req.body.email
@@ -95,7 +111,7 @@ router.patch('/updateA', async (req,res) => {
 })
 
 //Delete Admin
-router.delete('/deleteA', async (req,res) => {
+router.delete('/deleteA', auth, async (req,res) => {
     let userName = req.body.userName
     let query = 'DELETE FROM admin WHERE admin.userName = ?'
 
