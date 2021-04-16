@@ -1,5 +1,8 @@
 const express = require('express');
 const sql = require('../config/mysqlConfig')
+const token = require('../methods/generateToken')
+const auth = require('../middleware/lecturerAuth')
+const auth2 = require('../middleware/adminAuth')
 
 const router = new express.Router()
 
@@ -16,16 +19,73 @@ router.post('/login', async (req,res) => {
         if(data.length === 0 || data === undefined){
             res.status(400).send('Invalid login')
         }
-
-        res.send(data)
+        let getToken = await token.generateToken(data[0].lecturerId,2,data[0].userName)
+        let data2 = {...data[0], token: getToken}
+        res.send(data2)
 
     } catch (error) {
         res.status(400).send(error)
     }
 })
 
+//Fetch All
+router.post('/fetchLecturers', auth2, async (req,res) => {
+    let query = 'Select * from lecturer '
+     try {
+        let conn = await sql.getDBConnection();
+        let [data,fields] = await conn.execute(query)
+        res.send(data)
+
+    } catch (error) {
+        res.status(400).send('error fetching Lecturers')
+    }
+})
+
+
+//Fetch Lecturer
+router.post('/fetchLecturer', auth, async (req,res) => {
+    let lecturerId = req.body.lecturerId 
+    let query = 'Select * from lecturer where lecturerId = ?'
+     try {
+        let conn = await sql.getDBConnection();
+        let [data,fields] = await conn.execute(query,[lecturerId])
+        res.send(data)
+
+    } catch (error) {
+        res.status(400).send('error fetching Admin')
+    }
+})
+
+//Admin fetch Lecturer
+router.post('/adminFetchLecturer', auth2, async (req,res) => {
+    let lecturerId = req.body.lecturerId 
+    let query = 'Select * from lecturer where lecturerId = ?'
+     try {
+        let conn = await sql.getDBConnection();
+        let [data,fields] = await conn.execute(query,[lecturerId])
+        res.send(data)
+
+    } catch (error) {
+        res.status(400).send('error fetching Admin')
+    }
+})
+
+//Admin fetch Lecturer by userName
+router.post('/adminFetchLecturerUserName', auth2, async (req,res) => {
+    let userName = req.body.userName 
+    let query = 'Select * from lecturer where userName = ?'
+     try {
+        let conn = await sql.getDBConnection();
+        let [data,fields] = await conn.execute(query,[userName])
+        res.send(data)
+
+    } catch (error) {
+        res.status(400).send('error fetching Admin')
+    }
+})
+
 //Add Lecturer
-router.post('/addL', async (req,res) => {
+router.post('/addL', auth2, async (req,res) => {
     let userName = req.body.userName
     let password = req.body.password
     let email = req.body.email
@@ -97,7 +157,7 @@ router.patch('/updateL', async (req,res) => {
 })
 
 //update Lecturer Status
-router.patch('/updateLecturerStatus', async (req,res) =>{
+router.patch('/updateLecturerStatus', auth2, async (req,res) =>{
     let userName = req.body.userName
     let status = req.body.status
     let query = 'UPDATE lecturer SET status = ? WHERE lecturer.userName = ?'
@@ -116,7 +176,6 @@ router.post('/assignLecturer', async (req,res) => {
     let subjectId = req.body.subjectId
     let sectionId = req.body.sectionId
     let programmingLanguageId = req.body.programmingLanguageId
-
     let testQuery = 'SELECT * FROM lecturerassigned WHERE lecturerId = ? AND subjectId = ? AND sectionId = ?'
     try {
         let conn = await sql.getDBConnection();
@@ -139,6 +198,18 @@ router.post('/assignLecturer', async (req,res) => {
     } catch (error) {
         res.status(400).send()
     }  
+})
+
+router.post('/getAssignedSections', auth2, async (req,res) => {
+    let lecturerId = req.body.lecturerId
+    let query = 'SELECT * FROM `lecturerassigned` INNER JOIN lecturer ON lecturerassigned.lecturerId = lecturer.lecturerId INNER JOIN subject ON lecturerassigned.subjectId = subject.subjectId INNER JOIN section ON section.sectionId = lecturerassigned.sectionId WHERE lecturerassigned.lecturerId = ?'
+    try {
+        let conn = await sql.getDBConnection();
+        let [data,fields] =  await conn.execute(query,[lecturerId])
+        res.send(data)
+    } catch (error) {
+        res.send(error)
+    }
 })
 
 //Delete a Lecturer

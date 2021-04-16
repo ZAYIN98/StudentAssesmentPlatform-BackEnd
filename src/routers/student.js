@@ -35,6 +35,20 @@ router.get('/getAll', async (req,res) => {
     }
 })
 
+//Get Lecturer Students
+router.post('/getLecturerStudents', async (req,res) => {
+    let sectionId = req.body.sectionId
+    let lecturerId = req.body.lecturerId
+    let query = 'SELECT student.studentId AS studentId, name, email, rollNo, atRisk FROM student INNER JOIN studentsection ON student.studentId = studentsection.studentId INNER JOIN studentsubject ON studentsubject.studentId = student.studentId INNER JOIN lecturerassigned ON lecturerassigned.sectionId = studentsection.sectionId INNER JOIN atriskstatus ON atriskstatus.studentId = student.studentId AND studentsubject.subjectId = lecturerassigned.subjectId WHERE lecturerassigned.lecturerId =? AND lecturerassigned.sectionId = ?'
+    try {
+        let conn = await sql.getDBConnection();
+        let [data,fields] = await conn.execute(query, [lecturerId,sectionId])
+        res.status(200).send(data)
+    } catch (error) {
+        res.status(400).send(error)
+    }
+})
+
 //Add a student
 router.post('/addS', async (req,res) => {
     let userName = req.body.userName

@@ -110,6 +110,37 @@ router.patch('/updateA', auth, async (req,res) => {
 
 })
 
+router.post('/getStats', auth, async (req,res) => {
+    let query = 'Select * from section'
+    let query2 = 'SELECT * FROM student'
+    let query3 = 'SELECT * FROM subject'
+    let query4 = 'SELECT * FROM lecturer'
+    let query5 = 'SELECT * FROM datasets'
+     try {
+        let conn = await sql.getDBConnection();
+        let [data,fields] = await conn.execute(query)
+        let [data2,fields2] = await conn.execute(query2)
+        let [data3,fields3] = await conn.execute(query3)
+        let [data4,fields4] = await conn.execute(query4)
+        let [data5,fields5] = await conn.execute(query5)
+        let sectionsL = data.length
+        let studentsL = data2.length
+        let subjectsL = data3.length
+        let lecturersL = data4.length
+        let dataSetsL = data5.length
+        res.send({
+            'sections':sectionsL,
+            'students':studentsL,
+            'subjects':subjectsL,
+            'lecturers':lecturersL,
+            'dataSets':dataSetsL
+        })
+
+    } catch (error) {
+        res.status(400).send('error fetching Admin')
+    }
+})
+
 //Delete Admin
 router.delete('/deleteA', auth, async (req,res) => {
     let userName = req.body.userName
@@ -123,6 +154,8 @@ router.delete('/deleteA', auth, async (req,res) => {
         res.status(400).send(error)
     }
 })
+
+
 
 
 

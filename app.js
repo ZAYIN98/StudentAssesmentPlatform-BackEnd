@@ -8,6 +8,8 @@ const studentRouter = require('./src/routers/student')
 const assignmentRouter = require('./src/routers/assignment')
 const dataSetRouter = require('./src/routers/assignment')
 const logoutRouter = require('./src/routers/logout')
+const sectionRouter = require('./src/routers/sections')
+const subjectRouter = require('./src/routers/subjects')
 const verifyUserToken = require('./src/routers/verifyUserToken')
 
 
@@ -32,6 +34,8 @@ app.use('/student',studentRouter)
 app.use('/assignment',assignmentRouter)
 app.use('/dataSet',dataSetRouter)
 app.use('/logout',logoutRouter)
+app.use('/sections',sectionRouter)
+app.use('/subjects',subjectRouter)
 app.use('/verifyUserToken',verifyUserToken)
 
 app.listen(port, () => {
