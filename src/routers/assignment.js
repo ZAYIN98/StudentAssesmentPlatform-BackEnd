@@ -1,19 +1,40 @@
 const express = require('express');
 const sql = require('../config/mysqlConfig')
+const auth2 = require('../middleware/lecturerAuth')
+const multer = require('multer')
+const fs = require("fs");
+var path = require('path')
 
 const router = new express.Router()
+var storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, 'src/uploads')
+    },
+    filename: function (req, file, cb) {
+      cb(null, Date.now() + path.extname(file.originalname))
+    }
+  })
+   
+  var upload = multer({ storage: storage })
 
+  
 //Create an assignment
-router.post('/createAssignment', async (req,res) => {
-    let name = req.body.name
-    let lecturerId = req.body.lecturerId
-    let details = req.body.details
-    let helpingMaterial = req.body.helpingMaterial
-    let query = 'INSERT INTO assignment(name, lecturerId, details, helpingMaterial) VALUES (?,?,?,?)'
-
+router.post('/createAssignment',auth2, upload.single('resourceMaterial'), async (req,res) => {
+    const file = req.file
+    // let name = req.body.name
+    // let lecturerId = req.body.lecturerId
+    // let details = req.body.details
+    // let helpingMaterial = req.body.helpingMaterial
+    // let query = 'INSERT INTO assignment(title, lecturerId, details, resourceLinks, resourceMaterial, solution) VALUES (?,?,?,?,?,?)'
+    console.log("resourceMaterial:", req.body)
     try {
-        let conn = await sql.getDBConnection();
-        await conn.execute(query,[name,lecturerId,details,helpingMaterial])
+        if (!file) {
+            const error = new Error('Please upload a file')
+            error.httpStatusCode = 400
+            console.log(error) 
+          }
+        // let conn = await sql.getDBConnection();
+        // await conn.execute(query,[name,lecturerId,details,helpingMaterial])
         res.status(200).send('Inserted assignment')
     } catch (error) {
         res.status(400).send(error)

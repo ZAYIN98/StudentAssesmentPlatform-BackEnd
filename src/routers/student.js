@@ -1,5 +1,7 @@
 const express = require('express');
 const sql = require('../config/mysqlConfig')
+const auth = require('../middleware/adminAuth')
+const auth2 = require('../middleware/lecturerAuth')
 
 const router = new express.Router()
 
@@ -24,8 +26,8 @@ router.post('/login', async (req,res) => {
 })
 
 //Get all Students
-router.get('/getAll', async (req,res) => {
-    let query = 'Select * from student'
+router.post('/getAll', auth, async (req,res) => {
+    let query = 'SELECT student.studentId, name, email, rollNo, email, section FROM student LEFT JOIN studentsection ON student.studentId = studentsection.studentId LEFT JOIN section ON section.sectionId = studentsection.sectionId'
     try {
         let conn = await sql.getDBConnection();
         let [data,fields] = await conn.execute(query)
@@ -36,13 +38,27 @@ router.get('/getAll', async (req,res) => {
 })
 
 //Get Lecturer Students
-router.post('/getLecturerStudents', async (req,res) => {
+router.post('/getLecturerStudents',auth, async (req,res) => {
     let sectionId = req.body.sectionId
     let lecturerId = req.body.lecturerId
-    let query = 'SELECT student.studentId AS studentId, name, email, rollNo, atRisk FROM student INNER JOIN studentsection ON student.studentId = studentsection.studentId INNER JOIN studentsubject ON studentsubject.studentId = student.studentId INNER JOIN lecturerassigned ON lecturerassigned.sectionId = studentsection.sectionId INNER JOIN atriskstatus ON atriskstatus.studentId = student.studentId AND studentsubject.subjectId = lecturerassigned.subjectId WHERE lecturerassigned.lecturerId =? AND lecturerassigned.sectionId = ?'
+    let subjectId = req.body.subjectId
+    let query = 'SELECT student.studentId AS studentId, name, email, rollNo, atRisk FROM student LEFT JOIN studentsection ON student.studentId = studentsection.studentId LEFT JOIN studentsubject ON studentsubject.studentId = student.studentId LEFT JOIN lecturerassigned ON lecturerassigned.sectionId = studentsection.sectionId LEFT JOIN atriskstatus ON atriskstatus.studentId = student.studentId AND studentsubject.subjectId = lecturerassigned.subjectId WHERE lecturerassigned.lecturerId =? AND lecturerassigned.sectionId = ? AND studentsubject.subjectId = ?'
     try {
         let conn = await sql.getDBConnection();
-        let [data,fields] = await conn.execute(query, [lecturerId,sectionId])
+        let [data,fields] = await conn.execute(query, [lecturerId,sectionId,subjectId])
+        res.status(200).send(data)
+    } catch (error) {
+        res.status(400).send(error)
+    }
+})
+
+//Get Lecturer Students 2
+router.post('/fetchStudents',auth2, async (req,res) => {
+    let lecturerId = req.body.lecturerId
+    let query = 'SELECT student.studentId, name, rollNo, email, subject, section, atRisk FROM lecturerassigned INNER JOIN studentsection ON lecturerassigned.lecturerId = studentsection.sectionId INNER JOIN student ON student.studentId = studentsection.studentId INNER JOIN studentsubject ON studentsubject.studentId = student.studentId INNER JOIN atriskstatus ON student.studentId = atriskstatus.studentId INNER JOIN section ON studentsection.sectionId = section.sectionId INNER JOIN subject ON subject.subjectId = studentsubject.subjectId WHERE lecturerId =? and lecturerassigned.subjectId = studentsubject.subjectId'
+    try {
+        let conn = await sql.getDBConnection();
+        let [data,fields] = await conn.execute(query, [lecturerId])
         res.status(200).send(data)
     } catch (error) {
         res.status(400).send(error)
@@ -74,6 +90,19 @@ router.post('/addS', async (req,res) => {
             res.status(400).send('Username Taken')
         }
         
+    } catch (error) {
+        res.status(401).send(error)
+    } 
+})
+
+//get at risk students
+router.post('/getAtRiskStudents',auth, async (req,res) => {
+    let query = 'SELECT * FROM student LEFT JOIN studentsection ON student.studentId = studentsection.studentId LEFT JOIN studentsubject ON student.studentId = studentsubject.studentId LEFT JOIN atriskstatus ON student.studentId = atriskstatus.studentId LEFT JOIN section ON studentsection.sectionId = section.sectionId LEFT JOIN subject ON subject.subjectId = studentsubject.subjectId WHERE atRisk IS NOT NULL'
+    
+    try {
+        let conn = await sql.getDBConnection();
+        let [data,fields] = await conn.execute(query)
+        res.send(data)
     } catch (error) {
         res.status(401).send(error)
     } 

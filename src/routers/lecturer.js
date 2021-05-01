@@ -200,9 +200,66 @@ router.post('/assignLecturer', async (req,res) => {
     }  
 })
 
+router.post('/unAssignLecturer', auth2, async (req,res) => {
+    let lecturerId = req.body.lecturerId
+    let sectionId = req.body.sectionId
+    let subjectId = req.body.subjectId
+    let query = 'DELETE FROM lecturerassigned WHERE lecturerId = ? AND sectionId = ? AND subjectId = ?'
+    let query2 = 'SELECT * FROM lecturerassigned WHERE lecturerId = ?'
+    let query3 = 'UPDATE lecturer SET status = 0 WHERE lecturerId = ?'
+    try {
+        let conn = await sql.getDBConnection();
+        await conn.execute(query,[lecturerId,sectionId,subjectId])
+        let [data,fields] =  await conn.execute(query2,[lecturerId])
+        if (!data.length) {
+            await conn.execute(query3,[lecturerId])
+        }
+        res.send('Unassigned')
+    } catch (error) {
+        res.send(error)
+    }
+})
+
 router.post('/getAssignedSections', auth2, async (req,res) => {
     let lecturerId = req.body.lecturerId
-    let query = 'SELECT * FROM `lecturerassigned` INNER JOIN lecturer ON lecturerassigned.lecturerId = lecturer.lecturerId INNER JOIN subject ON lecturerassigned.subjectId = subject.subjectId INNER JOIN section ON section.sectionId = lecturerassigned.sectionId WHERE lecturerassigned.lecturerId = ?'
+    let query = 'SELECT section.sectionId, section, COUNT(DISTINCT stdSubjectId) subjectStudents, subject, subject.subjectId FROM `lecturerassigned` LEFT JOIN lecturer ON lecturerassigned.lecturerId = lecturer.lecturerId LEFT JOIN subject ON lecturerassigned.subjectId = subject.subjectId LEFT JOIN section ON section.sectionId = lecturerassigned.sectionId LEFT JOIN studentsection ON studentsection.sectionId = section.sectionId LEFT JOIN studentsubject ON studentsubject.studentId = studentsection.studentId AND studentsubject.subjectId = lecturerassigned.subjectId WHERE lecturerassigned.lecturerId = ? GROUP BY section.sectionId'
+    try {
+        let conn = await sql.getDBConnection();
+        let [data,fields] =  await conn.execute(query,[lecturerId])
+        res.send(data)
+    } catch (error) {
+        res.send(error)
+    }
+})
+
+router.post('/getLecturerSectionList', auth, async (req,res) => {
+    let lecturerId = req.body.lecturerId
+    let query = 'SELECT section.sectionId, section FROM lecturerassigned INNER JOIN section ON lecturerassigned.sectionId = section.sectionId WHERE lecturerassigned.lecturerId = ?'
+    try {
+        let conn = await sql.getDBConnection();
+        let [data,fields] =  await conn.execute(query,[lecturerId])
+        res.send(data)
+    } catch (error) {
+        res.send(error)
+    }
+})
+
+router.post('/getSectionSubjectList', auth, async (req,res) => {
+    let lecturerId = req.body.lecturerId
+    let sectionId = req.body.sectionId
+    let query = 'SELECT lecturerassigned.subjectId, subject FROM lecturerassigned INNER JOIN subject ON lecturerassigned.subjectId = subject.subjectId WHERE lecturerassigned.lecturerId = ? AND lecturerassigned.sectionId = ?'
+    try {
+        let conn = await sql.getDBConnection();
+        let [data,fields] =  await conn.execute(query,[lecturerId,sectionId])
+        res.send(data)
+    } catch (error) {
+        res.send(error)
+    }
+})
+
+router.post('/getLectrerStatus', auth, async (req,res) => {
+    let lecturerId = req.body.lecturerId
+    let query = 'SELECT status FROM lecturer WHERE lecturerId = ?'
     try {
         let conn = await sql.getDBConnection();
         let [data,fields] =  await conn.execute(query,[lecturerId])
